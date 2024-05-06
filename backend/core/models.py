@@ -33,10 +33,9 @@ class Snippet(models.Model):
         return self.name
     
 
-from django.db import models
-
 def upload_to(instance, filename):
     return 'passports/{filename}'.format(filename=filename)
+
 
 class Customer(models.Model):
     name = models.TextField()
@@ -57,21 +56,9 @@ class Customer(models.Model):
             return { "status": "ACTIVE", "active_booking": active_bookings.id}
         else:
             return { "status": "OLDER", "active_booking": None}
-from django.db import models
+
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractUser
-
-
-class User(AbstractUser):
-    role = models.TextField(
-        choices=( 
-            ("OWNER", "OWNER"),
-            ("PARTNER", "PARTNER"),
-        ),
-        default="OWNER"
-    )
-    contact = models.TextField(null=True)
-
 from django.conf import settings
 from core.utils import _validate_gmaps_link
 
@@ -87,9 +74,7 @@ class Property(models.Model):
     name = models.TextField()
     gmaps_link = models.TextField(validators=[_validate_gmaps_link])
     neighbourhood = models.TextField()
-    building_name = models.ForeignKey(
-        Building, on_delete=models.CASCADE, related_name="bookings"
-    )
+    building_name = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="Building", null=False)
     apt_number = models.TextField()
     num_bedrooms = models.IntegerField()
     num_cleaners = models.IntegerField()
@@ -155,11 +140,10 @@ class Property(models.Model):
         
         return False
 
+
+
 import uuid
-
 _property = property
-
-
 class Booking(models.Model):
     property = models.ForeignKey(
         Property, on_delete=models.CASCADE, related_name="bookings"
@@ -195,7 +179,7 @@ class Booking(models.Model):
                 "property_name": booking_property.name,
                 "apt_number": booking_property.apt_number,
                 "neighbourhood": booking_property.neighbourhood,
-                "building_name": booking_property.building_name
+                "building_name": booking_property.building_name.name
             }
         except:
             return None
@@ -260,7 +244,15 @@ class Booking(models.Model):
             }
         except:
             return None
+    
+    def __str__(self):
+        return self.property.building_name.name
 
+
+
+#from .models import Booking
+from .serializers import PropertySerializerForJob
+from .serializers import BookingSerializerForJob, LateCheckOutRequesWithBookingtSerializer
 
 class LateCheckOutRequest(models.Model):
 
@@ -281,6 +273,80 @@ class LateCheckOutRequest(models.Model):
     job_status = models.TextField()
     created_on = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
+
+
+
+
+class Payment(models.Model):
+    booking = models.OneToOneField(Booking, on_delete=models.CASCADE, related_name="payment")
+    intent_id = models.TextField(null=True)
+    paid = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
+    refunded = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
+    status = models.TextField(
+        choices=( 
+            ("PENDING", "PENDING"),
+            ("NOT_APPLICABLE", "NOT_APPLICABLE"),
+            ("PAID", "PAID"),
+            ("REFUNDED", "REFUNDED"),
+        ),
+        default="PENDING"
+    )
+    created_on = models.DateTimeField(auto_now_add=True)
+    last_modified = models.DateTimeField(auto_now=True)
+
+class User(AbstractUser):
+    role = models.TextField(
+        choices=( 
+            ("OWNER", "OWNER"),
+            ("PARTNER", "PARTNER"),
+        ),
+        default="OWNER"
+    )
+    contact = models.TextField(null=True)
+
+
+
+# Create your models here.
+class Job(models.Model):
+    class Meta:
+        verbose_name_plural = "Jobs"
+
+    def __str__(self): 
+         return f"Job # {self.id} (Property # {self.booking.id})"
+
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name="jobs")
+    status = models.TextField(
+        choices=( 
+            ("PENDING", "PENDING"),
+            ("ACCEPTED", "ACCEPTED"),
+            ("DECLINED", "DECLINED"),
+            ("ENROUTE", "ENROUTE"),
+            ("ARRIVED", "ARRIVED"),
+            ("CLEANING", "CLEANING"),
+            ("COMPLETED", "COMPLETED"),
+            ("CANCELLED", "CANCELLED"),
+            ("CHANGED", "CHANGED"),
+        ),
+        default="PENDING"
+    )
+    created_on = models.DateTimeField(auto_now_add=True)
+    last_modified = models.DateTimeField(auto_now=True)
+
+    @property
+    def property_details(self):
+        serializer = PropertySerializerForJob(self.booking.property)
+        return serializer.data
+    
+    @property
+    def booking_details(self):
+        serializer = BookingSerializerForJob(self.booking)
+        return serializer.data
+    
+    @property
+    def late_checkout_request_details(self):
+        late_request = LateCheckOutRequest.objects.filter(booking_id=self.booking_id).first()
+        serializer = LateCheckOutRequesWithBookingtSerializer(late_request)
+        return serializer.data
 
 
 class Feedback(models.Model):

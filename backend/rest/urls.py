@@ -16,12 +16,20 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from core import views
+from rest_framework.routers import DefaultRouter ,SimpleRouter
+
+router = DefaultRouter()
+router.register('property', views.PropertyViewSet, basename='property')
+router.register('bookings', views.BookingViewSet, basename='booking')
+#router.register('customer/<uuid:uuid>', views.bookings_by_property, basename='create_customer')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-
-    path("send_email/",views.send_email_file,name = "send_email"),
-    path("send_email_with_attachment/",views.send_email_with_attachment,name = "send_email_with_attachment"),
+    #path("send_email/",views.send_email_file,name = "send_email"),
+    path("customer/<uuid:uuid>", views.CreateCustomerView.as_view(),name='create-customer'),
+    #path("send_email_with_attachment/",views.send_email_with_attachment,name = "send_email_with_attachment"),
     path("api_test/", views.studentlist.as_view()),
-    #path("property/",views.PropertyViewSet, basename='property')
+    path("<int:id>/bookings", views.bookings_by_property),
+    path("partners-list/", views.get_available_partners_list),
 ]
+urlpatterns += router.urls

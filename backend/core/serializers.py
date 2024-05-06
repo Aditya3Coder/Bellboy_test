@@ -1,23 +1,39 @@
 from rest_framework import serializers
-from .models import Snippet, LANGUAGE_CHOICES, STYLE_CHOICES
+from .models import LANGUAGE_CHOICES, STYLE_CHOICES , Building
+#from .models import Booking,Building, Snippet, Customer, Payment, User, Property, LateCheckOutRequest, Feedback
 
-
+from .models import Snippet
 class SnippetSerializer(serializers.ModelSerializer):
     class Meta:
         model =  Snippet
         fields = ['id','name','Address']
 
+from .models import Building
+class BuildingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Building
+        fields = ['id', 'name', 'address', 'security_email1', 'security_email2', 'documents']
 
-from rest_framework import serializers
+    def create(self, validated_data):
+        return Building.objects.create(**validated_data)
 
-from .models import Booking, LateCheckOutRequest, Feedback
-
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.address = validated_data.get('address', instance.address)
+        instance.security_email1 = validated_data.get('security_email1', instance.security_email1)
+        instance.security_email2 = validated_data.get('security_email2', instance.security_email2)
+        instance.documents = validated_data.get('documents', instance.documents)
+        instance.save()
+        return instance
+    
 
 class LateCheckOutRequesWithBookingtSerializer(serializers.ModelSerializer):
     class Meta:
-        model = LateCheckOutRequest
+        model = "core.LateCheckOutRequest"
         fields = '__all__'
 
+
+from .models import Booking
 class BookingSerializer(serializers.ModelSerializer):
 
     property_details = serializers.ReadOnlyField()
@@ -30,7 +46,7 @@ class BookingSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['customer', 'status']
 
-        
+
 class BookingCustomerSerializer(serializers.ModelSerializer):
 
     property_details = serializers.ReadOnlyField()
@@ -54,28 +70,26 @@ class BookingSerializerForJob(serializers.ModelSerializer):
 
 class FeedbackSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Feedback
+        model = "core.Feedback"
         fields = '__all__'
 
 
 class LateCheckOutRequestSerializer(serializers.ModelSerializer):
     class Meta:
-        model = LateCheckOutRequest
+        model = "core.LateCheckOutRequest"
         fields = ['requested_end_date', 'requested_checkout_time']
 
+from .models import Customer,Property
 
-from .models import Customer
 
 class CustomerSerializer(serializers.ModelSerializer):
     total_bookings = serializers.ReadOnlyField()
     customer_status = serializers.ReadOnlyField()
-    passport_file = serializers.FileField()
+    #passport_file = serializers.FileField()
     class Meta:
         model = Customer
         fields = '__all__'
 
-
-from .models import Property
 
 class PropertySerializer(serializers.ModelSerializer):
 
@@ -90,6 +104,7 @@ class PropertySerializer(serializers.ModelSerializer):
 
 
 class PropertySerializerForJob(serializers.ModelSerializer):
+    Building = BuildingSerializer()
     class Meta:
         model = Property
         fields = ['name', 'apt_number', 'building_name', 'neighbourhood',   'num_bedrooms', 'num_cleaners', 'num_cleaning_hours']
