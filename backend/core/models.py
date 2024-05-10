@@ -74,6 +74,7 @@ class Property(models.Model):
     name = models.TextField()
     gmaps_link = models.TextField(validators=[_validate_gmaps_link])
     neighbourhood = models.TextField()
+    description = models.TextField(null = False)
     building_name = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="Building", null=False)
     apt_number = models.TextField()
     num_bedrooms = models.IntegerField()
@@ -84,6 +85,7 @@ class Property(models.Model):
     default_deposit_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
     agent_name = models.TextField(blank=True)
     notes = models.TextField(blank=True)
+    
     created_on = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
 
