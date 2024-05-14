@@ -1,12 +1,6 @@
 import datetime
 from typing import Any
 from django.db import models
-from pygments.lexers import get_all_lexers
-from pygments.styles import get_all_styles
-
-LEXERS = [item for item in get_all_lexers() if item[1]]
-LANGUAGE_CHOICES = sorted([(item[1][0], item[0]) for item in LEXERS])
-STYLE_CHOICES = sorted([(item, item) for item in get_all_styles()])
 
 class Building(models.Model):
     id =           models.AutoField(primary_key=True)
@@ -18,6 +12,20 @@ class Building(models.Model):
 
     def __str__(self):
         return self.name
+    
+
+
+    class Building(models.Model):
+    id =           models.AutoField(primary_key=True)
+    name =         models.CharField(max_length=100,blank=False, null=False)
+    address =      models.CharField(max_length=255, blank=False, null=False)
+    security_email1 = models.EmailField(blank=False, null=False)
+    security_email2 = models.EmailField(blank=True, null=True)
+    documents = models.FileField(upload_to='building_documents/%Y/%m/%d',blank=True, null=True)
+
+    def __str__(self):
+        return self.name
+
 
 
 

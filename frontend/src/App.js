@@ -20,7 +20,8 @@ useEffect(()=>{
 },[])
   return (
     <div className="App">
-      <h1>om gan gan ganpatye namah</h1>
+      <h1>om gan gan ganpatye namah   </h1>
+      <h1>om gan gan ganpatye namah   </h1>
       {
         students.map((student,i)=>{
           return(

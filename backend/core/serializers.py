@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import LANGUAGE_CHOICES, STYLE_CHOICES , Building
+# from .models import LANGUAGE_CHOICES, STYLE_CHOICES , Building
 #from .models import Booking,Building, Snippet, Customer, Payment, User, Property, LateCheckOutRequest, Feedback
 
 from .models import Snippet
